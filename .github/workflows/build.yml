@@ -42,7 +42,8 @@ jobs:
         run: |
           python -m venv "$HOME/cyanenv"
           "$HOME/cyanenv/bin/pip" install --upgrade pip
-          "$HOME/cyanenv/bin/pip" install pyzule-rw
+          "$HOME/cyanenv/bin/pip" install --force-reinstall https://github.com/asdfzxcvbn/pyzule-rw/archive/main.zip
+          "$HOME/cyanenv/bin/cyan" -h > /dev/null && echo "cyan OK"
           echo "$HOME/cyanenv/bin" >> "$GITHUB_PATH"
           go install github.com/asdfzxcvbn/ipapatch@latest
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
