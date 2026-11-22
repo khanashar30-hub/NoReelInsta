@@ -28,9 +28,22 @@ jobs:
           cp -R "$HOME"/theos-sdks/*.sdk "$HOME/theos/sdks/"
           echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
       - name: Install cyan and ipapatch
         run: |
-          pip3 install --break-system-packages pyzule-rw || pip3 install pyzule-rw
+          python -m venv "$HOME/cyanenv"
+          "$HOME/cyanenv/bin/pip" install --upgrade pip
+          "$HOME/cyanenv/bin/pip" install pyzule-rw
+          echo "$HOME/cyanenv/bin" >> "$GITHUB_PATH"
           go install github.com/asdfzxcvbn/ipapatch@latest
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
