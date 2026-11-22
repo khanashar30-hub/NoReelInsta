@@ -26,6 +26,13 @@ jobs:
           git clone --depth 1 https://github.com/theos/sdks.git "$HOME/theos-sdks"
           mkdir -p "$HOME/theos/sdks"
           cp -R "$HOME"/theos-sdks/*.sdk "$HOME/theos/sdks/"
+          echo "Available SDKs:"; ls "$HOME/theos/sdks"
+          # The Makefile asks for iPhoneOS16.2.sdk; if it's missing, alias the newest available SDK to that name
+          if [ ! -d "$HOME/theos/sdks/iPhoneOS16.2.sdk" ]; then
+            NEWEST=$(ls -d "$HOME"/theos/sdks/iPhoneOS*.sdk | sort -V | tail -n 1)
+            echo "iPhoneOS16.2.sdk not found, using $NEWEST"
+            cp -R "$NEWEST" "$HOME/theos/sdks/iPhoneOS16.2.sdk"
+          fi
           echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
 
       - name: Set up Python
