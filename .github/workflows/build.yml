@@ -1,0 +1,54 @@
+name: Build NoReelInsta IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: "Direct download link to your decrypted Instagram .ipa"
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install build tools (GNU make, ldid, dpkg)
+        run: |
+          brew install make ldid dpkg xz
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Install Theos
+        run: |
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          git clone --depth 1 https://github.com/theos/sdks.git "$HOME/theos-sdks"
+          mkdir -p "$HOME/theos/sdks"
+          cp -R "$HOME"/theos-sdks/*.sdk "$HOME/theos/sdks/"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+
+      - name: Install cyan and ipapatch
+        run: |
+          pip3 install --break-system-packages pyzule-rw || pip3 install pyzule-rw
+          go install github.com/asdfzxcvbn/ipapatch@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Download decrypted Instagram IPA
+        run: |
+          mkdir -p packages
+          curl -L --fail -o packages/com.burbn.instagram.ipa "${{ inputs.ipa_url }}"
+          file packages/com.burbn.instagram.ipa
+          unzip -l packages/com.burbn.instagram.ipa | grep -q "Payload/" || { echo "Not a valid IPA"; exit 1; }
+
+      - name: Build
+        run: |
+          chmod +x build.sh
+          ./build.sh sideload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: NoReelInsta-sideloaded
+          path: packages/NoReelInsta-sideloaded.ipa
+          retention-days: 3
